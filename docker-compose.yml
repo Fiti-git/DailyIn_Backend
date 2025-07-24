@@ -3,7 +3,7 @@ version: '3.9'
 services:
   web:
     build: .
-    command: gunicorn DailyIn_Backend.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn dailyinven.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
