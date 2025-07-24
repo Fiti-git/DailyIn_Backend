@@ -5,3 +5,4 @@ drf-yasg
 gunicorn
 psycopg2-binary
 psutil
+django-cors-headers
