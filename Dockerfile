@@ -21,4 +21,5 @@ COPY . .
 RUN python manage.py collectstatic --noinput
 
 # Run the Django server
-CMD ["gunicorn", "DailyIn_Backend.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "dailyinven.wsgi:application", "--bind", "0.0.0.0:8000"]
+
