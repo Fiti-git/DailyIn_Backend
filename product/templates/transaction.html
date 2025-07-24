@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Management</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Transaction Management</h1>
+
+        <!-- Add Transaction Form -->
+        <div>
+            <h3>Add Transaction</h3>
+            <form id="transaction-form">
+                <select id="product-select-transaction">
+                    <!-- Product options will be dynamically populated -->
+                </select>
+                <select id="outlet-select-transaction">
+                    <!-- Outlet options will be dynamically populated -->
+                </select>
+                <input type="number" id="quantity-transaction" placeholder="Quantity" required>
+                <select id="transaction-type">
+                    <option value="IN">Stock In</option>
+                    <option value="OUT">Stock Out</option>
+                    <option value="ADJ">Adjustment</option>
+                </select>
+                <input type="text" id="remarks" placeholder="Remarks (optional)">
+                <button type="submit">Add Transaction</button>
+            </form>
+        </div>
+
+        <!-- Transaction List -->
+        <div id="transaction-list"></div>
+    </div>
+
+    <script src="stock.js"></script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Backend Health Dashboard</title>
+<style>
+  /* Reset & basics */
+  body {
+    margin: 0; padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9fafb;
+    color: #222;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    color: #2c3e50;
+  }
+
+  /* Container */
+  .container {
+    max-width: 900px;
+    margin: auto;
+  }
+
+  /* Status */
+  #status {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    padding: 10px 0;
+    border-radius: 6px;
+  }
+  .status.healthy {
+    color: #2e7d32;
+    background-color: #d0f0c0;
+  }
+  .status.unhealthy {
+    color: #c62828;
+    background-color: #f9c0c0;
+  }
+
+  /* Cards container */
+  #health-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+  }
+
+  /* Card styles */
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    padding: 15px 20px;
+    flex: 1 1 280px;
+    min-width: 280px;
+    max-width: 400px;
+  }
+  .card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #34495e;
+  }
+  .card p, .card li {
+    margin: 4px 0;
+    font-size: 0.95rem;
+  }
+  .card ul {
+    padding-left: 20px;
+    margin: 0;
+  }
+
+  /* Error message */
+  #error {
+    color: #c62828;
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    #health-info {
+      flex-direction: column;
+      align-items: center;
+    }
+    .card {
+      max-width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Backend Health Dashboard</h1>
+    <div id="status" class="status">Loading status...</div>
+    <div id="health-info">
+      <p>Loading data...</p>
+    </div>
+    <div id="error"></div>
+  </div>
+
+  <script>
+    function formatBytes(bytes) {
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+      if (bytes === 0) return '0 Bytes';
+      const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10);
+      return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i];
+    }
+
+    function updateDashboard() {
+      fetch('/api/health/')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          document.getElementById('error').textContent = '';
+          const statusEl = document.getElementById('status');
+          statusEl.textContent = `System Status: ${data.status}`;
+          statusEl.className = `status ${data.status === 'OK' ? 'healthy' : 'unhealthy'}`;
+
+          const container = document.getElementById('health-info');
+          container.innerHTML = `
+            <div class="card">
+              <h3>Server</h3>
+              <p><strong>Time:</strong> ${new Date(data.server_time).toLocaleString()}</p>
+              <p><strong>Uptime:</strong> ${data.uptime}</p>
+              <p><strong>Version:</strong> ${data.version}</p>
+              <p><strong>OS:</strong> ${data.system.os}</p>
+              <p><strong>Hostname:</strong> ${data.system.hostname}</p>
+              <p><strong>Python Version:</strong> ${data.system.python_version}</p>
+            </div>
+            <div class="card">
+              <h3>CPU</h3>
+              <p><strong>Usage:</strong> ${data.cpu_percent}%</p>
+              <p><strong>Temperature:</strong> ${data.temperature.cpu ? data.temperature.cpu + ' °C' : 'N/A'}</p>
+            </div>
+            <div class="card">
+              <h3>Memory</h3>
+              <p><strong>Usage:</strong> ${data.memory.percent}%</p>
+              <p><strong>Used:</strong> ${formatBytes(data.memory.used)}</p>
+              <p><strong>Total:</strong> ${formatBytes(data.memory.total)}</p>
+            </div>
+            <div class="card">
+              <h3>Disk</h3>
+              <p><strong>Usage:</strong> ${data.disk.percent}%</p>
+              <p><strong>Used:</strong> ${formatBytes(data.disk.used)}</p>
+              <p><strong>Total:</strong> ${formatBytes(data.disk.total)}</p>
+            </div>
+            <div class="card">
+              <h3>Network</h3>
+              <p><strong>Sent:</strong> ${formatBytes(data.network.sent)}</p>
+              <p><strong>Received:</strong> ${formatBytes(data.network.recv)}</p>
+            </div>
+            <div class="card" style="flex-basis:100%;">
+              <h3>Top 5 Processes by CPU%</h3>
+              <ul>
+                ${data.top_processes.map(proc => `
+                  <li>${proc.name || 'N/A'} - CPU: ${proc.cpu_percent.toFixed(1)}%, MEM: ${proc.memory_percent.toFixed(1)}%</li>
+                `).join('')}
+              </ul>
+            </div>
+            <div class="card" style="flex-basis:100%;">
+              <h3>Recent Errors/Warnings</h3>
+              <ul>
+                ${data.errors.map(line => `<li>${line}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        })
+        .catch(error => {
+          document.getElementById('error').textContent = `Error loading health data: ${error.message}`;
+          console.error('Fetch error:', error);
+        });
+    }
+
+    // Initial load
+    updateDashboard();
+    // Refresh every 5 seconds
+    setInterval(updateDashboard, 5000);
+  </script>
+
+</body>
+</html>
