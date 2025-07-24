@@ -17,7 +17,8 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DEBUG=0
-      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - DJANGO_ALLOWED_HOSTS=206.189.134.117 localhost 127.0.0.1
+
 
   db:
     image: postgres:15
